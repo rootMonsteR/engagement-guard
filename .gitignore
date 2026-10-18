@@ -3,3 +3,12 @@ dist/
 coverage/
 .guard/
 *.tgz
+
+# Local-only working material: never published (travels with a copy of the folder, not a clone)
+.claude/
+CLAUDE.md
+docs/context/
+docs/superpowers/
+STATUS.md
+.superpowers/
+.worktrees/
