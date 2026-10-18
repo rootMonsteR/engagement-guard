@@ -1,0 +1,43 @@
+# The extraction-table case (P1 Task 11): acme-external plus 203.0.113.0/24 out of scope.
+# RFC 5737 / RFC 3849 / .example only. The clock in the table test is Wed 2026-10-21 10:00+02:00.
+version: 1
+id: acme-table-2026q4
+name: ACME Corp external assessment, Q4 2026 (guard table)
+type: pentest
+profile: external
+client: ACME Corp (fictional)
+authorization:
+  reference: SOW-2026-117
+  authorised_by: Dana Reyes, CISO, ACME Corp
+  signed_on: 2026-10-10
+window:
+  start: 2026-10-20T08:00:00+02:00
+  end: 2026-10-31T18:00:00+01:00
+  timezone: Europe/Amsterdam
+scope:
+  in:
+    - acme.example
+    - "*.acme.example"
+    - 192.0.2.0/25
+    - 2001:db8:ac::/48
+    - https://portal.acme-partner.example:8443/app/
+  out:
+    - vpn.acme.example
+    - "*.corp.acme.example"
+    - 192.0.2.66
+    - 203.0.113.0/24
+    - 127.0.0.2                    # P12: a listed loopback address is still out
+  operator_infrastructure:
+    - 198.51.100.10
+  allow_private_targets: false
+  require_ip_match: true
+roe:
+  allowed_test_classes: [recon, vuln-scan]
+  credentialed_testing: false
+  intrusive_checks: false
+  dos_testing: false
+  rate_limits: { rps: 50, pps: 1000, nmap_max_timing: 3, max_parallel_hosts: 16 }
+  blackout_hours:
+    - { days: [mon, tue, wed, thu, fri], start: "12:00", end: "13:00" }
+    - { start: "23:30", end: "01:00" }
+execution: { backend: host }

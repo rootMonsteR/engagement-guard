@@ -1,0 +1,242 @@
+# Redaction corpus for packages/sec/src/audit/redact.ts (spec §6.6, Review Focus 5).
+#
+# Each row: `input`, `mustNotContain` (substrings that must be gone after redact()),
+# optional `mustContain` (context that must survive), optional `unchanged: true` (a near-miss:
+# redact() must return the input byte-for-byte). Every pattern family has at least one
+# positive row and one near-miss. All secrets are fake; hosts are RFC 5737 / .example.
+
+# --- user:pass@ in URLs ---
+- family: url-userinfo
+  input: curl https://admin:P%40ssw0rd@acme.example/login
+  mustNotContain: ['P%40ssw0rd']
+  mustContain: ['https://admin:', '@acme.example/login']
+- family: url-userinfo
+  input: psql postgres://app:dbpass123@db.acme.example:5432/app
+  mustNotContain: ['dbpass123']
+  mustContain: ['db.acme.example:5432/app']
+- family: url-userinfo
+  input: git clone https://dev:p@ss@w0rd@git.acme.example/repo.git
+  mustNotContain: ['p@ss', 'w0rd']
+  mustContain: ['@git.acme.example/repo.git']
+- family: url-userinfo
+  input: curl https://acme.example:8443/path?q=1&page=2
+  unchanged: true
+- family: url-userinfo
+  input: ssh admin@192.0.2.10
+  unchanged: true
+- family: url-userinfo
+  input: git clone git@git.acme.example:org/repo.git
+  unchanged: true
+
+# --- -u / --user user:pass, -U user%pass ---
+- family: user-flag
+  input: curl -u admin:S3cr3t! https://acme.example
+  mustNotContain: ['S3cr3t!']
+  mustContain: ['-u admin:', 'https://acme.example']
+- family: user-flag
+  input: curl --user=admin:Hunter2pass https://acme.example
+  mustNotContain: ['Hunter2pass']
+- family: user-flag
+  input: "curl -u 'svc:pass with spaces' https://acme.example"
+  mustNotContain: ['pass with spaces']
+- family: user-flag
+  input: "smbclient //192.0.2.10/share -U 'ACME/admin%Pa55word'"
+  mustNotContain: ['Pa55word']
+  mustContain: ['ACME/admin%']
+- family: user-flag
+  input: curl -u admin https://acme.example
+  unchanged: true
+- family: user-flag
+  input: smbclient -L //192.0.2.10 -U guest
+  unchanged: true
+
+# --- -p / --password / --pass / /p: ---
+- family: password-flag
+  input: "nxc smb 192.0.2.10 -u administrator -p 'Winter2026!'"
+  mustNotContain: ['Winter2026!']
+  mustContain: ['-u administrator']
+- family: password-flag
+  input: sshpass -p hunter2 ssh root@192.0.2.10
+  mustNotContain: ['hunter2']
+- family: password-flag
+  input: mysql -uroot -pTopSecret -h 192.0.2.5
+  mustNotContain: ['TopSecret']
+- family: password-flag
+  input: hydra -l admin -p 123456 ssh://192.0.2.10
+  mustNotContain: ['123456']
+- family: password-flag
+  input: vault-cli login --password=Sup3rS3cret --pass "other secret"
+  mustNotContain: ['Sup3rS3cret', 'other secret']
+- family: password-flag
+  input: xfreerdp /v:192.0.2.10 /u:admin /p:RdpPass123
+  mustNotContain: ['RdpPass123']
+- family: password-flag
+  input: nmap -p 80,443 -sV 192.0.2.10
+  unchanged: true
+- family: password-flag
+  input: nmap -p- -sV 198.51.100.7
+  unchanged: true
+- family: password-flag
+  input: mkdir -p out/scans && docker run -p 8080:80 nginx
+  unchanged: true
+- family: password-flag
+  input: nc -l -p 4444
+  unchanged: true
+- family: password-flag
+  input: xfreerdp /v:192.0.2.10 /u:admin
+  unchanged: true
+
+# --- Authorization / Proxy-Authorization / API-key headers ---
+- family: header
+  input: "curl -H 'Authorization: Bearer abcDEF123456789xyz' https://api.acme.example"
+  mustNotContain: ['abcDEF123456789xyz']
+  mustContain: ['Authorization: Bearer ', 'https://api.acme.example']
+- family: header
+  input: 'curl -H "Proxy-Authorization: Basic YWRtaW46c2VjcmV0" https://acme.example'
+  mustNotContain: ['YWRtaW46c2VjcmV0']
+- family: header
+  input: "curl -H 'X-Api-Key: k3y-v4lue-0001' -H 'Cookie: session=abc123def' https://api.acme.example"
+  mustNotContain: ['k3y-v4lue-0001', 'abc123def']
+- family: header
+  input: '{"headers":{"authorization":"Digest username=admin, response=6629fae49393a053"}}'
+  mustNotContain: ['6629fae49393a053']
+- family: header
+  input: "curl -H 'Accept: application/json' -H 'X-Authorization-Mode: strict' https://acme.example"
+  unchanged: true
+- family: header
+  input: grep -i authorization /var/log/acme/access.log
+  unchanged: true
+
+# --- Bearer / Basic tokens ---
+- family: bearer
+  input: echo Bearer AbC123xyz987TOKEN
+  mustNotContain: ['AbC123xyz987TOKEN']
+- family: bearer
+  input: 'export AUTH="Basic dXNlcjpwYXNz" && curl -H "X-Trace: 1" https://acme.example'
+  mustNotContain: ['dXNlcjpwYXNz']
+- family: bearer
+  input: echo "use Basic authentication or a Bearer token"
+  unchanged: true
+
+# --- token= / api_key= / secret= / password= (query strings and key=value) ---
+- family: kv
+  input: curl 'https://api.acme.example/v1?token=tok_live_123456&page=2'
+  mustNotContain: ['tok_live_123456']
+  mustContain: ['page=2']
+- family: kv
+  input: curl https://api.acme.example/v1?api_key=ABCD1234EFGH&x=1
+  mustNotContain: ['ABCD1234EFGH']
+  mustContain: ['x=1']
+- family: kv
+  input: GITHUB_TOKEN=plainvalue42 DB_PASSWORD=letmein123 client_secret=shhh-its-secret ./run.sh
+  mustNotContain: ['plainvalue42', 'letmein123', 'shhh-its-secret']
+  mustContain: ['./run.sh']
+- family: kv
+  input: '{"user":"bob","password": "jsonpass99"}'
+  mustNotContain: ['jsonpass99']
+  mustContain: ['"user":"bob"']
+- family: kv
+  input: export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY; echo done
+  mustNotContain: ['wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY']
+- family: kv
+  input: tool --token ghtoken123abc --api-key KEY123456 --secret 's p a c e'
+  mustNotContain: ['ghtoken123abc', 'KEY123456', 's p a c e']
+- family: kv
+  input: tool --token-file ./token.txt --show-token
+  unchanged: true
+- family: kv
+  input: python train.py --tokenizer=bert max_tokens=100 bypass=1 secret_santa=bob
+  unchanged: true
+
+# --- cloud and SaaS key formats ---
+- family: aws
+  input: export AWS_ACCESS_KEY_ID AKIAIOSFODNN7EXAMPLE
+  mustNotContain: ['AKIAIOSFODNN7EXAMPLE']
+- family: aws
+  input: echo AKIA1234 is too short
+  unchanged: true
+- family: github
+  input: git push https://x-access:ghp_FAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKE1234@git.acme.example/r.git; echo github_pat_11FAKEFAKE0123456789_abcdefghijklmnopqrstuvwxyz | gh auth login --with-token
+  mustNotContain: ['ghp_FAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKE1234', 'github_pat_11FAKEFAKE0123456789_abcdefghijklmnopqrstuvwxyz']
+- family: github
+  input: git checkout ghp_short gho_branch
+  unchanged: true
+- family: anthropic
+  input: ANTHROPIC='sk-ant-api03-FAKEfakeFAKEfake0123456789-xyz' claude
+  mustNotContain: ['sk-ant-api03-FAKEfakeFAKEfake0123456789-xyz', 'FAKEfakeFAKEfake0123456789']
+- family: anthropic
+  input: echo sk-ant-short task-ant-runner
+  unchanged: true
+- family: openai
+  input: llm keys set openai sk-proj-FAKEfakeFAKEfake0123456789abcd
+  mustNotContain: ['sk-proj-FAKEfakeFAKEfake0123456789abcd']
+- family: openai
+  input: pip install sk-learn-extra disk-usage-report-generator
+  unchanged: true
+- family: slack
+  # Letters, not digit groups, so a secret scanner does not mistake the fixture for a real token.
+  input: curl -d token=xoxb-FAKEFAKEFAKE-FAKEfakeFAKEfake https://slack.example/api
+  mustNotContain: ['xoxb-FAKEFAKEFAKE-FAKEfakeFAKEfake', 'FAKEFAKEFAKE-FAKEfakeFAKEfake']
+- family: slack
+  input: echo xoxo-friends xoxp-short
+  unchanged: true
+
+# --- JWT ---
+- family: jwt
+  input: echo eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U | jwt decode
+  mustNotContain: ['eyJzdWIiOiIxMjM0NTY3ODkwIn0', 'dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U']
+  mustContain: ['| jwt decode']
+- family: jwt
+  input: echo eyJhbGciOi | base64 -d
+  unchanged: true
+
+# --- PEM private keys ---
+- family: private-key
+  input: |-
+    cat > id_rsa <<'K'
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+    QyNTUxOQAAACBFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEAAAA
+    -----END OPENSSH PRIVATE KEY-----
+    K
+  mustNotContain: ['b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQ', 'QyNTUxOQAAACBFAKEFAKE']
+  mustContain: ['-----BEGIN OPENSSH PRIVATE KEY-----', '-----END OPENSSH PRIVATE KEY-----', "\nK"]
+- family: private-key
+  input: |-
+    -----BEGIN EC PRIVATE KEY-----
+    MHcCAQEEIFAKEFAKEFAKEtruncatedkeymaterial
+  mustNotContain: ['MHcCAQEEIFAKEFAKEFAKEtruncatedkeymaterial']
+- family: private-key
+  input: |-
+    -----BEGIN CERTIFICATE-----
+    MIIBszCCAVmgAwIBAgIUFAKE
+    -----END CERTIFICATE-----
+    -----BEGIN PUBLIC KEY-----
+    MCowBQYDK2VwAyEAFAKE
+    -----END PUBLIC KEY-----
+  unchanged: true
+
+# --- NTLM hashes (impacket / nxc) and impacket target strings ---
+- family: ntlm
+  input: impacket-secretsdump -hashes aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0 'ACME/admin@192.0.2.10'
+  mustNotContain: ['aad3b435b51404eeaad3b435b51404ee', '31d6cfe0d16ae931b73c59d7e0c089c0']
+  mustContain: ["'ACME/admin@192.0.2.10'"]
+- family: ntlm
+  input: nxc smb 192.0.2.10 -u admin -H 31d6cfe0d16ae931b73c59d7e0c089c0
+  mustNotContain: ['31d6cfe0d16ae931b73c59d7e0c089c0']
+- family: ntlm
+  input: psexec.py -hashes :31d6cfe0d16ae931b73c59d7e0c089c0 ACME/admin@192.0.2.10
+  mustNotContain: ['31d6cfe0d16ae931b73c59d7e0c089c0']
+- family: ntlm
+  input: "Administrator:500:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::"
+  mustNotContain: ['aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0']
+- family: ntlm
+  input: "md5sum report.pdf # d41d8cd98f00b204e9800998ecf8427e; curl -H 'X-Request-Id: d41d8cd98f00b204e9800998ecf8427e' https://acme.example"
+  unchanged: true
+- family: impacket-target
+  input: impacket-psexec 'ACME/admin:Passw0rd!@192.0.2.10'
+  mustNotContain: ['Passw0rd!']
+  mustContain: ["'ACME/admin:", "@192.0.2.10'"]
+- family: impacket-target
+  input: docker pull registry.acme.example/nginx:1.27@sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+  unchanged: true

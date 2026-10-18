@@ -1,0 +1,73 @@
+{
+  "name": "engagement-guard",
+  "version": "0.1.0",
+  "description": "Authorisation-bounded agent execution: an engagement file, a scope engine, a shell-command target extractor, a fail-closed decision matrix and a hash-chained audit log for AI agents that run security tools.",
+  "license": "Apache-2.0",
+  "author": "rootMonsteR",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rootMonsteR/engagement-guard.git"
+  },
+  "homepage": "https://github.com/rootMonsteR/engagement-guard#readme",
+  "bugs": {
+    "url": "https://github.com/rootMonsteR/engagement-guard/issues"
+  },
+  "keywords": [
+    "security",
+    "pentest",
+    "ai-agents",
+    "authorization",
+    "scope",
+    "audit-log",
+    "claude-code",
+    "mcp",
+    "rules-of-engagement"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "packageManager": "pnpm@10.12.2",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "engagement-guard": "./dist/cli/bin.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "check": "pnpm lint && pnpm typecheck && pnpm test"
+  },
+  "dependencies": {
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@types/node": "^26.6.5",
+    "tsdown": "^0.23.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

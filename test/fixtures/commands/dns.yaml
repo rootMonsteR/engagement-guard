@@ -1,0 +1,12 @@
+# Fake forward-lookup map for the guard table (P1 Task 11). Names not listed fail like ENOTFOUND.
+# RFC 5737 / RFC 3849 / .example addresses only; trusted names get documentation addresses too.
+acme.example: [192.0.2.21]
+www.acme.example: [192.0.2.20]
+portal.acme-partner.example: [192.0.2.30]
+mail.acme.example: [203.0.113.25]        # resolves into out (203.0.113.0/24)
+internal.acme.example: [10.0.0.5]        # private answer on an external case
+shop.acme.example: [198.51.100.200]      # outside `in` with require_ip_match: third-party hosting
+unknown.example: [198.51.100.50]         # a public name the case does not list
+github.com: [198.51.100.140]
+pypi.org: [198.51.100.141]
+raw.githubusercontent.com: [198.51.100.142]

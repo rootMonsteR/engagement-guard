@@ -1,0 +1,7 @@
+# In-scope targets for the acme-external table case (RFC 5737 / RFC 3849 / .example only)
+192.0.2.10
+192.0.2.0/28
+www.acme.example
+
+https://portal.acme-partner.example:8443/app/login
+2001:db8:ac::10

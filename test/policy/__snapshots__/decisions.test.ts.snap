@@ -1,0 +1,259 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`formatDecision > AUDIT_UNAVAILABLE: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [AUDIT_UNAVAILABLE]: the audit log cannot be written, so network actions fail closed
+Target: 192.0.2.10: in-scope, rule in[0]: 192.0.2.0/24
+Detail: ENOSPC: no space left on device
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+The operator must restore the audit log (disk space, permissions), then check it with \`engagement-guard audit verify\`."
+`;
+
+exports[`formatDecision > BLACKOUT: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [BLACKOUT]: inside a blackout period of the engagement
+Target: 192.0.2.10: blackout, no matching scope rule
+Rule: roe.blackout_hours[0]: Mon–Fri 12:00–13:00 Europe/London
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+Nothing overrides blackout hours; only an audited \`engagement-guard engagement edit\` changes them. Do not try to work around this check."
+`;
+
+exports[`formatDecision > CASE_INVALID: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [CASE_INVALID]: the case file failed validation
+Target: 192.0.2.10: no-engagement, no matching scope rule
+Detail: scope.in[1]: expected an IP, range, hostname or URL
+Tier: recon
+Case: none active (expected at .guard/engagement.yaml)
+The operator must fix the case file; \`engagement-guard engagement validate\` lists every error."
+`;
+
+exports[`formatDecision > EXPLOITATION_CONFIRM: names its code, is plain, short and stable 1`] = `
+"engagement-guard: NEEDS CONFIRMATION (unskippable) [EXPLOITATION_CONFIRM]: exploitation is authorised by the RoE but needs the operator to confirm
+Target: https://portal.acme.example/login: in-scope, rule in[3]: https://portal.acme.example/
+Tier: exploitation
+Case: acme-ext-2026 (.guard/engagement.yaml)
+This confirmation can never be skipped, remembered or pre-approved."
+`;
+
+exports[`formatDecision > FIRST_RUN_REQUIRED: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [FIRST_RUN_REQUIRED]: security tools are locked until the first-run acknowledgement is completed
+Target: 192.0.2.10: no-engagement, no matching scope rule
+Tier: recon
+Case: none active (expected at .guard/engagement.yaml)
+The operator must complete the first-run acknowledgement (\`engagement-guard ack\`). Do not try to work around this check."
+`;
+
+exports[`formatDecision > GUARD_ERROR: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [GUARD_ERROR]: internal error in the scope guard; the action failed closed
+Targets: none extracted
+Detail: TypeError: cannot read properties of undefined
+Case: acme-ext-2026 (.guard/engagement.yaml)
+Tell the operator. Do not retry the action in another form."
+`;
+
+exports[`formatDecision > HARD_REFUSAL: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [HARD_REFUSAL]: refused: the action is on the hard denylist
+Target: 192.0.2.10: in-scope, rule in[0]: 192.0.2.0/24
+Rule: nmap-script-dos: nmap --script selecting DoS scripts or categories that include them
+Suggestion: --script "vuln and not dos"
+Case: acme-ext-2026 (.guard/engagement.yaml)
+Hard refusals cannot be approved or allowed by any case, mode, grant or setting. Do not try to work around this check."
+`;
+
+exports[`formatDecision > IN_SCOPE: names its code, is plain, short and stable 1`] = `
+"engagement-guard: PASS [IN_SCOPE]: all targets are in scope; tier and rate are within the RoE
+Target: 192.0.2.10: in-scope, rule in[0]: 192.0.2.0/24
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+Core permission rules decide next."
+`;
+
+exports[`formatDecision > INFRA_NOT_TARGET: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [INFRA_NOT_TARGET]: trusted infrastructure is not a target
+Target: registry.npmjs.org (infrastructure): trusted-infra, rule trusted_infrastructure: registry.npmjs.org
+Tier: vuln-scan
+Case: acme-ext-2026 (.guard/engagement.yaml)
+Registries, code hosts and resolvers may be fetched from, never scanned, fuzzed, brute-forced or exploited. Do not try to work around this check."
+`;
+
+exports[`formatDecision > INTERPRETER_TARGETS: names its code, is plain, short and stable 1`] = `
+"engagement-guard: NEEDS CONFIRMATION [INTERPRETER_TARGETS]: an interpreter or unknown program is given network targets
+Target: 192.0.2.10: in-scope, rule in[0]: 192.0.2.0/24
+Case: acme-ext-2026 (.guard/engagement.yaml)
+The operator must confirm what this program does with these targets."
+`;
+
+exports[`formatDecision > LOCAL_TARGET: names its code, is plain, short and stable 1`] = `
+"engagement-guard: PASS [LOCAL_TARGET]: loopback targets only
+Target: 127.0.0.1:8080: local, no matching scope rule
+Tier: recon
+Case: none active (expected at .guard/engagement.yaml)
+Core permission rules decide next."
+`;
+
+exports[`formatDecision > NO_ACTIVE_CASE: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [NO_ACTIVE_CASE]: no active case: remote network actions need an engagement
+Target: scanme.acme.example: no-engagement, no matching scope rule
+Tier: recon
+Case: none active (expected at .guard/engagement.yaml)
+The operator can create a case with \`engagement-guard init\`, then attest it with \`engagement-guard engagement freeze\`."
+`;
+
+exports[`formatDecision > NO_TARGETS_FOUND: names its code, is plain, short and stable 1`] = `
+"engagement-guard: NEEDS CONFIRMATION [NO_TARGETS_FOUND]: a known network tool with no target the guard could read
+Targets: none extracted
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+Name the targets explicitly on the command line, or the operator must confirm."
+`;
+
+exports[`formatDecision > NOT_ACKNOWLEDGED: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [NOT_ACKNOWLEDGED]: the case scope has not been attested and frozen
+Target: 192.0.2.10: not-acknowledged, no matching scope rule
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+The operator must review the scope and attest it with \`engagement-guard engagement freeze\`."
+`;
+
+exports[`formatDecision > NOT_NETWORK: names its code, is plain, short and stable 1`] = `
+"engagement-guard: PASS [NOT_NETWORK]: not a network action
+Targets: none extracted
+Case: none active (expected at .guard/engagement.yaml)
+Core permission rules decide next."
+`;
+
+exports[`formatDecision > OPAQUE_CONSTRUCT: names its code, is plain, short and stable 1`] = `
+"engagement-guard: NEEDS CONFIRMATION [OPAQUE_CONSTRUCT]: the command uses constructs the guard cannot read
+Targets: none extracted
+Tier: recon
+Opaque constructs: command-substitution, variable
+Case: acme-ext-2026 (.guard/engagement.yaml)
+Write the targets literally, or the operator must confirm."
+`;
+
+exports[`formatDecision > OPERATOR_INFRA: names its code, is plain, short and stable 1`] = `
+"engagement-guard: PASS [OPERATOR_INFRA]: the remaining targets are operator infrastructure
+Target: 203.0.113.200 (infrastructure): operator-infra, rule operator_infrastructure[0]: 203.0.113.200
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+Core permission rules decide next."
+`;
+
+exports[`formatDecision > OUT_OF_SCOPE: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [OUT_OF_SCOPE]: a target is out of scope
+Target: 203.0.113.5: out-of-scope, rule out[0]: 203.0.113.0/24
+Target: 192.0.2.10: in-scope, rule in[0]: 192.0.2.0/24
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+If the client has authorised this, the operator can update \`.guard/engagement.yaml\` and run \`engagement-guard engagement edit\` (audited). Do not try to work around this check."
+`;
+
+exports[`formatDecision > OUTSIDE_WINDOW: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [OUTSIDE_WINDOW]: outside the engagement window
+Target: 192.0.2.10: outside-window, no matching scope rule
+Rule: window: 2026-10-01T09:00:00+01:00 → 2026-10-12T18:00:00+01:00
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+Nothing overrides the window; only an audited \`engagement-guard engagement edit\` changes it. Do not try to work around this check."
+`;
+
+exports[`formatDecision > POWERSHELL_NETWORK_TOOL: names its code, is plain, short and stable 1`] = `
+"engagement-guard: NEEDS CONFIRMATION [POWERSHELL_NETWORK_TOOL]: a PowerShell command names a network tool
+Targets: none extracted
+Opaque constructs: powershell
+Case: acme-ext-2026 (.guard/engagement.yaml)
+The operator must confirm; PowerShell commands are not parsed for targets."
+`;
+
+exports[`formatDecision > PROTECTED_PATH: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [PROTECTED_PATH]: refused: the model may not write the case file, scope snapshots, audit log or keys
+Targets: none extracted
+Rule: /work/.guard/engagement.yaml
+Detail: Write /work/.guard/engagement.yaml
+Case: acme-ext-2026 (.guard/engagement.yaml)
+The operator edits the case file outside the model and attests the change with \`engagement-guard engagement edit\` (audited). Do not try to work around this check."
+`;
+
+exports[`formatDecision > RANGE_NOT_FULLY_AUTHORISED: names its code, is plain, short and stable 1`] = `
+"engagement-guard: NEEDS CONFIRMATION [RANGE_NOT_FULLY_AUTHORISED]: a range is only partly covered by the scope
+Target: 192.0.2.0/23: unknown, rule in[0]: 192.0.2.0/24
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+Narrow the range to the in-scope part, or the operator must confirm."
+`;
+
+exports[`formatDecision > RATE_EXCEEDS_ROE: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [RATE_EXCEEDS_ROE]: the rate or timing exceeds the RoE limit
+Target: 192.0.2.0/28: in-scope, rule in[0]: 192.0.2.0/24
+Rule: roe.rate_limits.nmap_max_timing: 3 (requested -T5)
+Tier: recon
+Compliant setting: -T3
+Case: acme-ext-2026 (.guard/engagement.yaml)
+Re-run with the compliant setting; RoE rate limits change only with \`engagement-guard engagement edit\`."
+`;
+
+exports[`formatDecision > RESOLVES_OUT_OF_SCOPE: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [RESOLVES_OUT_OF_SCOPE]: a hostname resolves to an out-of-scope address
+Target: shop.acme.example: out-of-scope, rule out[1]: 198.51.100.0/24, resolves to 198.51.100.20
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+If the client has authorised this, the operator can update \`.guard/engagement.yaml\` and run \`engagement-guard engagement edit\` (audited). Do not try to work around this check."
+`;
+
+exports[`formatDecision > RESOLVES_PRIVATE: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [RESOLVES_PRIVATE]: a hostname resolves to a private address on a non-internal case
+Target: intranet.acme.example: out-of-scope, rule in[2]: *.acme.example, resolves to 10.20.0.5
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+If the client has authorised this, the operator can update \`.guard/engagement.yaml\` and run \`engagement-guard engagement edit\` (audited). Do not try to work around this check."
+`;
+
+exports[`formatDecision > SCOPE_TAMPERED: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [SCOPE_TAMPERED]: the scope changed after it was frozen (scope hash mismatch)
+Target: 192.0.2.10: not-acknowledged, no matching scope rule
+Rule: frozen scope_hash 3f2a…9c1d ≠ current 77be…0a42
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+The operator must review the change and re-attest it with \`engagement-guard engagement freeze\`. Do not try to work around this check."
+`;
+
+exports[`formatDecision > THIRD_PARTY_HOSTING: names its code, is plain, short and stable 1`] = `
+"engagement-guard: NEEDS CONFIRMATION [THIRD_PARTY_HOSTING]: a target resolves outside the in-scope ranges (possible third-party hosting)
+Target: www.acme.example: unknown, rule in[2]: *.acme.example, resolves to 198.51.100.77
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+The operator must confirm that the client owns this hosting before it is tested."
+`;
+
+exports[`formatDecision > TIER_NOT_AUTHORISED: names its code, is plain, short and stable 1`] = `
+"engagement-guard: DENIED [TIER_NOT_AUTHORISED]: the rules of engagement do not authorise this tier
+Target: 192.0.2.10: in-scope, rule in[0]: 192.0.2.0/24
+Rule: roe.allowed_test_classes: recon, vuln-scan
+Tier: exploitation
+Case: acme-ext-2026 (.guard/engagement.yaml)
+If the client has authorised this tier, the operator can add it to roe.allowed_test_classes with \`engagement-guard engagement edit\` (audited). Do not try to work around this check."
+`;
+
+exports[`formatDecision > TRUSTED_INFRA: names its code, is plain, short and stable 1`] = `
+"engagement-guard: PASS [TRUSTED_INFRA]: trusted infrastructure used for fetch, VCS, packages, DNS or remote access
+Target: github.com (infrastructure): trusted-infra, rule trusted_infrastructure: github.com
+Tier: recon
+Case: none active (expected at .guard/engagement.yaml)
+Core permission rules decide next."
+`;
+
+exports[`formatDecision > UNKNOWN_TARGET: names its code, is plain, short and stable 1`] = `
+"engagement-guard: NEEDS CONFIRMATION [UNKNOWN_TARGET]: a target matches no scope entry
+Target: partner.acme-partner.example: unknown, no matching scope rule
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+The operator must confirm; if the target belongs to the engagement, add it with \`engagement-guard engagement edit\`."
+`;
+
+exports[`formatDecision > UNRESOLVABLE: names its code, is plain, short and stable 1`] = `
+"engagement-guard: NEEDS CONFIRMATION [UNRESOLVABLE]: an in-scope name did not resolve
+Target: old.acme.example: in-scope, rule in[2]: *.acme.example
+Tier: recon
+Case: acme-ext-2026 (.guard/engagement.yaml)
+The operator must confirm before the action runs."
+`;

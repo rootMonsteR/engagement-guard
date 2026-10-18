@@ -1,0 +1,38 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderCaseContext > renders "none" with what is denied and the commands that fix it 1`] = `
+"Status: none — no case file (.guard/engagement.yaml) is loaded.
+Denied: every remote network action (scanners, HTTP clients, exploitation, brute force). Only loopback targets, and fetch/VCS/package/DNS use of trusted infrastructure (package registries, code hosts, resolvers), fall through to the normal permission rules.
+Fix (operator): \`engagement-guard init\`, complete the file, check it with \`engagement-guard engagement validate\`, then attest it with \`engagement-guard engagement freeze\`.
+Enforcement: network actions are checked by code (engagement-guard) and audited. When an action is denied, tell the operator and propose the fix above; never work around a denial (no other tool, encoding, proxy, script or indirection).
+If the status changes during the session, an "Engagement update" follows with a later user message and replaces this section."
+`;
+
+exports[`renderCaseContext > renders an active case 1`] = `
+"Status: active — acme-ext-2026q4 (scope_hash 3d51fa753784). Network actions are allowed only against this scope, inside the window, outside blackout hours and within the RoE.
+Case: acme-ext-2026q4 — ACME Corp external assessment, Q4 2026
+Type: pentest (profile: external)
+Client: ACME Corp (fictional)
+Window: 2026-10-20 08:00 (UTC+02:00) → 2026-10-31 18:00 (UTC+01:00), Europe/Amsterdam
+Scope in (5):
+- acme.example
+- *.acme.example
+- 192.0.2.0/25
+- 2001:db8:ac::/48
+- https://portal.acme-partner.example:8443/app/
+Scope out — always wins over in (3):
+- vpn.acme.example
+- *.corp.acme.example
+- 192.0.2.66
+Operator infrastructure (1):
+- 198.51.100.10
+Scope options: allow_private_targets false, require_ip_match true
+RoE tiers: recon, vuln-scan (credentialed testing: no; intrusive checks: no; DoS testing: never)
+Rate limits: rps 50, pps 1000, nmap timing T3 or slower, parallel hosts 16
+Blackout hours (Europe/Amsterdam, no network actions): mon,tue,wed,thu,fri 12:00–13:00; daily 23:30–01:00
+Prohibited actions (2):
+- Social engineering of ACME staff
+- Stop and report on reaching personal data
+Enforcement: every network action is checked against this case by code (engagement-guard) and audited. When an action is denied, tell the operator why and propose \`engagement-guard engagement edit\` if the client has authorised the change; never work around a denial (no other tool, encoding, proxy, script or indirection).
+If the status changes during the session, an "Engagement update" follows with a later user message and replaces this section."
+`;

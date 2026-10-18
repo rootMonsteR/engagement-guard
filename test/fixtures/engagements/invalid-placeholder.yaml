@@ -1,0 +1,16 @@
+version: 1
+id: minimal-case
+name: Minimal case
+type: pentest
+client: TODO fill in the client name
+authorization:
+  reference: AL-0001
+  authorised_by: A. Signer
+  signed_on: 2026-10-01
+window:
+  start: 2026-10-01T00:00:00Z
+  end: 2026-12-31T23:59:59Z
+  timezone: UTC
+scope:
+  in:
+    - 192.0.2.10

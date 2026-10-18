@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit|WebFetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "engagement-guard hook --tool WebFetch",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+version: 1
+id: acme-ext-2026q4
+name: ACME Corp external assessment, Q4 2026
+type: pentest                             # case kind (§2a); hardening/incident/ai-assessment arrive in later slices
+profile: external                         # scope profile (§6.3): external | web | internal | cloud
+client: ACME Corp (fictional)
+authorization:
+  reference: SOW-2026-117 / authorisation letter AL-2026-117
+  authorised_by: Dana Reyes, CISO, ACME Corp
+  signed_on: 2026-10-10
+  document: docs/authorisation/AL-2026-117.pdf
+window:                                   # explicit offsets; DST ends 2026-10-25 in this zone
+  start: 2026-10-20T08:00:00+02:00
+  end: 2026-10-31T18:00:00+01:00
+  timezone: Europe/Amsterdam
+scope:
+  in:
+    - acme.example
+    - "*.acme.example"
+    - 192.0.2.0/25
+    - 2001:db8:ac::/48
+    - https://portal.acme-partner.example:8443/app/
+  out:                                    # always wins over `in`
+    - vpn.acme.example
+    - "*.corp.acme.example"
+    - 192.0.2.66
+  operator_infrastructure:
+    - 198.51.100.10                       # operator callback VPS
+  allow_private_targets: false
+  require_ip_match: true
+roe:
+  allowed_test_classes: [recon, vuln-scan]
+  credentialed_testing: false
+  intrusive_checks: false
+  dos_testing: false
+  rate_limits: { rps: 50, pps: 1000, nmap_max_timing: 3, max_parallel_hosts: 16 }
+  blackout_hours:
+    - { days: [mon, tue, wed, thu, fri], start: "12:00", end: "13:00" }
+    - { start: "23:30", end: "01:00" }    # nightly backup window, crosses midnight
+  prohibited_actions:
+    - Social engineering of ACME staff
+    - Stop and report on reaching personal data
+execution: { backend: host }
+notifications: {}
+# acknowledged_by / frozen are written by engagement-guard engagement freeze; never edit them by hand
