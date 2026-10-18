@@ -9,14 +9,11 @@ an **ask**; a pass stays silent so Claude Code's ordinary permission rules apply
 
 ## Install
 
-The package is not on npm yet, so install it from a clone; `npx engagement-guard` only resolves
-to this code once the authors publish it. A hook that cannot start is non-blocking in Claude Code,
-so point the hook at an installed binary or an absolute path, never at a download:
+A hook that cannot start is non-blocking in Claude Code, so install the package and point the
+hook at the installed binary rather than at `npx`, which may have to download first:
 
 ```sh
-git clone <this repository> engagement-guard && cd engagement-guard
-pnpm install && pnpm build
-npm install -g .          # provides the `engagement-guard` command used below
+npm install -g engagement-guard        # provides the `engagement-guard` command used below
 ```
 
 Add the hook to `.claude/settings.json` in the project (or to your user settings). The file in

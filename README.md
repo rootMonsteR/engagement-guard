@@ -4,13 +4,12 @@ engagement-guard decides whether a shell command or a network tool call is autho
 
 ## Install
 
-The package is not on npm yet, so `npm install -g engagement-guard` and `npx engagement-guard` do not resolve to this code until the authors publish it; until then install from a clone and point hooks at the installed binary or an absolute path:
-
 ```sh
-git clone <this repository> engagement-guard && cd engagement-guard
-pnpm install && pnpm build
-npm install -g .          # provides the `engagement-guard` command
+npm install -g engagement-guard        # the `engagement-guard` command
+npm install engagement-guard           # the library, in a project
 ```
+
+Requires Node 22.12 or newer. From a clone instead: `pnpm install && pnpm build && npm install -g .`.
 
 ## Sixty seconds
 
