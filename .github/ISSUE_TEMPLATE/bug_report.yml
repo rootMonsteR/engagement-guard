@@ -1,0 +1,36 @@
+name: Bug report
+description: A wrong decision that is not a bypass, a crash, a bad message, or a build or install problem.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A command that gets `pass` or `ask` where the decision matrix says `deny` is a security problem: report it privately through the link on the new-issue page, not here.
+  - type: textarea
+    id: command
+    attributes:
+      label: What you ran
+      description: The exact command or tool call, and how it reached the guard (CLI `check`, the Claude Code hook, the library, the MCP example).
+      render: sh
+    validations:
+      required: true
+  - type: textarea
+    id: engagement
+    attributes:
+      label: Engagement file
+      description: The `.guard/engagement.yaml` in use, with real targets replaced by RFC 5737 addresses (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24) or `.example` names.
+      render: yaml
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision you got, and the one you expected
+      description: The reason code and message from the guard, and the row of `docs/decision-matrix.md` you think applies.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Package version, operating system and Node version
+      placeholder: 0.1.0, Ubuntu 24.04, Node 22.12.0
+    validations:
+      required: true

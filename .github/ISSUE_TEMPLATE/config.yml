@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a guard bypass or other security problem (private)
+    url: https://github.com/rootMonsteR/engagement-guard/security/advisories/new
+    about: A command that reaches an out-of-scope target without a deny, an audit-chain flaw, a secret in the log, or a hook that lets a tool run. See SECURITY.md. Do not open a public issue for these.

@@ -1,0 +1,30 @@
+name: Teach the extractor a tool
+description: A program, or a flag of one, whose targets the extractor does not see or sees wrongly.
+labels: [known-tools]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The extractor learns programs from the known-tools table in `src/extract/tools-table.ts`. A command it does not understand still goes through the literal sweep, so an unknown tool with a visible address is caught; this request is for the flags and files it would otherwise miss.
+  - type: input
+    id: program
+    attributes:
+      label: Program
+      placeholder: masscan
+    validations:
+      required: true
+  - type: textarea
+    id: flags
+    attributes:
+      label: Flags that take a target, and flags that take a file of targets
+      description: One per line, with what each one takes (a host, a CIDR, a URL, a file path). Link the tool's documentation if you can.
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: A sample command and the targets the guard should extract from it
+      description: Use RFC 5737 addresses (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24) or `.example` names only.
+      render: sh
+    validations:
+      required: true

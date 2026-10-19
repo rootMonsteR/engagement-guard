@@ -36,4 +36,5 @@ Extracted from the security layer (`packages/sec`) of the authors' Nemesis proje
   (`nemesis-audit-v1`) do not verify under this package.
 - The first-run statement (`first-run-v1`) describes this library; no acknowledgement given to
   another product carries over.
-- Published on npm as `engagement-guard`.
+- Source release on GitHub (tag `v0.1.0`). The npm package `engagement-guard` is not published yet;
+  until it is, install from a clone as the README describes.

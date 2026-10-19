@@ -4,16 +4,20 @@ engagement-guard decides whether a shell command or a network tool call is autho
 
 ## Install
 
+The package is not on npm yet. Until it is published there as `engagement-guard`, install from a clone:
+
 ```sh
-npm install -g engagement-guard        # the `engagement-guard` command
-npm install engagement-guard           # the library, in a project
+git clone https://github.com/rootMonsteR/engagement-guard.git
+cd engagement-guard
+pnpm install && pnpm build
+npm install -g .                       # the `engagement-guard` command
 ```
 
-Requires Node 22.12 or newer. From a clone instead: `pnpm install && pnpm build && npm install -g .`.
+Requires Node 22.12 or newer and pnpm. To use the library in a project before the npm release, add the clone as a dependency: `npm install /path/to/engagement-guard`.
 
 ## Sixty seconds
 
-This is a real run of the CLI. It uses a scratch workspace and a scratch `GUARD_HOME`. The window brackets the time of the run. Paths inside the workspace are shown as `<demo>`. The operator statement printed by `ack` is left out here; read it in full when you run `ack`. `init`, `ack` and `engagement freeze|edit|load` must be typed at a terminal: run without one (piped, or by an agent) they refuse, and the guard denies them when it sees them in a shell command.
+This is a real run of the CLI, captured on Windows under Git Bash. It uses a scratch workspace and a scratch `GUARD_HOME`. The window brackets the time of the run. Paths inside the workspace are shown as `<demo>`, with forward slashes. The operator statement printed by `ack` is left out here; read it in full when you run `ack`. `init`, `ack` and `engagement freeze|edit|load` must be typed at a terminal: run without one (piped, or by an agent) they refuse, and the guard denies them when it sees them in a shell command.
 
 ```sh
 pnpm build
@@ -24,7 +28,7 @@ alias engagement-guard="node /path/to/engagement-guard/dist/cli/bin.js"
 
 ```text
 $ engagement-guard init --id demo-2026q4 --name Demo --client "Demo Ltd" --in 192.0.2.0/24 --out 192.0.2.66 --window-start 2026-10-17T19:02:38Z --window-end 2026-10-19T19:02:38Z --timezone UTC --auth-ref SOW-1 --authorised-by "Dana Reyes" --signed-on 2026-10-10
-wrote <demo>\.guard\engagement.yaml
+wrote <demo>/.guard/engagement.yaml
 next: replace every TODO, then run: engagement-guard engagement validate
 # exit code 0
 
@@ -48,7 +52,7 @@ pass IN_SCOPE
 engagement-guard: PASS [IN_SCOPE]: all targets are in scope; tier and rate are within the RoE
 Target: 192.0.2.10: in-scope, rule in[0]: 192.0.2.0/24
 Tier: recon
-Case: demo-2026q4 (<demo>\.guard\engagement.yaml)
+Case: demo-2026q4 (<demo>/.guard/engagement.yaml)
 Core permission rules decide next.
 targets: 192.0.2.10 (in-scope)
 # exit code 0
@@ -58,7 +62,7 @@ ask UNKNOWN_TARGET
 engagement-guard: NEEDS CONFIRMATION [UNKNOWN_TARGET]: a target matches no scope entry
 Target: 203.0.113.5: unknown, no matching scope rule
 Tier: recon
-Case: demo-2026q4 (<demo>\.guard\engagement.yaml)
+Case: demo-2026q4 (<demo>/.guard/engagement.yaml)
 The operator must confirm; if the target belongs to the engagement, add it with `engagement-guard engagement edit`.
 targets: 203.0.113.5 (unknown)
 # exit code 1
@@ -68,7 +72,7 @@ deny OUT_OF_SCOPE
 engagement-guard: DENIED [OUT_OF_SCOPE]: a target is out of scope
 Target: 192.0.2.66: out-of-scope, rule out[0]: 192.0.2.66
 Tier: recon
-Case: demo-2026q4 (<demo>\.guard\engagement.yaml)
+Case: demo-2026q4 (<demo>/.guard/engagement.yaml)
 If the client has authorised this, the operator can update `.guard/engagement.yaml` and run `engagement-guard engagement edit` (audited). Do not try to work around this check.
 targets: 192.0.2.66 (out-of-scope)
 # exit code 2
@@ -78,7 +82,7 @@ ask OPAQUE_CONSTRUCT
 engagement-guard: NEEDS CONFIRMATION [OPAQUE_CONSTRUCT]: the command uses constructs the guard cannot read
 Targets: none extracted
 Opaque constructs: piped-code
-Case: demo-2026q4 (<demo>\.guard\engagement.yaml)
+Case: demo-2026q4 (<demo>/.guard/engagement.yaml)
 Write the targets literally, or the operator must confirm.
 # exit code 1
 
@@ -161,7 +165,7 @@ below, and the configuration to rely on when compliance depends on it.
 
 ## Tests
 
-The suite has 2,129 passing tests and 3 skipped (2,132 in all, run on 2026-10-18 after the final review and the follow-up fixes). The command extraction table in `test/fixtures/commands/extraction-table.yaml` (209 rows) runs each row through the extractor and the guard.
+The suite has 2,132 tests. On Windows 2,129 pass and 3 are skipped (the POSIX file-mode and `/proc` checks); on Linux and macOS 2,128 pass and 4 are skipped (the Windows path-form checks). CI runs it on all three; the figures are from the run of 2026-10-18 after the final review and the follow-up fixes. The command extraction table in `test/fixtures/commands/extraction-table.yaml` (209 rows) runs each row through the extractor and the guard.
 
 ```sh
 pnpm install
@@ -170,4 +174,4 @@ pnpm check      # biome lint, tsc typecheck, vitest
 
 ## Licence
 
-Apache-2.0; see [LICENSE](LICENSE) and [NOTICE](NOTICE). The code was extracted from the security layer of the authors' Nemesis project.
+Apache-2.0; see [LICENSE](LICENSE) and [NOTICE](NOTICE). The code was extracted from the security layer of the authors' Nemesis project. Comments in the source and in `docs/decision-matrix.md` that cite `§` sections or `P`-numbered rulings refer to that project's internal design documents, which are not published; they are kept so that each rule can be traced to its origin. What this package does is defined by `docs/decision-matrix.md` and the extraction table, not by those documents.

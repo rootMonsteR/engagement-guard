@@ -113,6 +113,7 @@ function markInspected(toolUseId: string | undefined): void {
   if (INSPECTED.has(toolUseId)) return
   INSPECTED.add(toolUseId)
   if (INSPECTED.size > MAX_INSPECTED) {
+    // A Set iterates in insertion order, so the first value is the oldest id.
     const oldest = INSPECTED.values().next()
     if (!oldest.done) INSPECTED.delete(oldest.value)
   }

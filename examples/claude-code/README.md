@@ -13,8 +13,11 @@ A hook that cannot start is non-blocking in Claude Code, so install the package 
 hook at the installed binary rather than at `npx`, which may have to download first:
 
 ```sh
-npm install -g engagement-guard        # provides the `engagement-guard` command used below
+git clone https://github.com/rootMonsteR/engagement-guard.git && cd engagement-guard
+pnpm install && pnpm build && npm install -g .     # provides the `engagement-guard` command used below
 ```
+
+Once the package is on npm this becomes `npm install -g engagement-guard`.
 
 Add the hook to `.claude/settings.json` in the project (or to your user settings). The file in
 this directory is the complete snippet:

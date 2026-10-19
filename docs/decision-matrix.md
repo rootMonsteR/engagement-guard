@@ -1,6 +1,6 @@
 # Decision matrix
 
-The two appendices of the Nemesis security plan this guard was extracted from, with names made product-neutral; `§` numbers refer to the Nemesis security spec.
+The two appendices of the Nemesis security plan this guard was extracted from, with names made product-neutral. `§` numbers and `P`-numbered rulings cite the Nemesis security spec and its decision log, which are the authors' internal documents and are not published; the references are kept as provenance. What the guard does is defined by the tables below and by `test/fixtures/commands/extraction-table.yaml`, not by those documents.
 
 ## Appendix A — Decision matrix (spec §6.5, verbatim) and how the guard evaluates it
 
