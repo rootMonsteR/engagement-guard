@@ -91,6 +91,70 @@ const DESTROY_ALL = new Set([
 /** Every operand is written (or becomes a link to / of a written name). */
 const WRITE_ALL = new Set(['tee', 'touch', 'truncate', 'fsutil', 'mklink'])
 const IN_PLACE = new Set(['sed', 'perl', 'ruby', 'gsed'])
+/** Editors that save their file operand, scripted or not (`ex -s -c wq x`, `vim -es +wq x`, `nano x`). */
+const EDITORS = new Set([
+  'vi',
+  'vim',
+  'nvim',
+  'gvim',
+  'ex',
+  'ed',
+  'nano',
+  'pico',
+  'emacs',
+  'micro',
+  'joe',
+  'code',
+  'subl',
+  'gedit',
+  'notepad',
+  'notepad++',
+])
+/** Programs `find -exec` can run without changing what it found. */
+const READ_ONLY = new Set([
+  'cat',
+  'grep',
+  'egrep',
+  'fgrep',
+  'rg',
+  'ls',
+  'file',
+  'stat',
+  'head',
+  'tail',
+  'wc',
+  'echo',
+  'printf',
+  'md5sum',
+  'sha1sum',
+  'sha256sum',
+  'du',
+  'realpath',
+  'readlink',
+  'basename',
+  'dirname',
+  'test',
+  '[',
+  'true',
+  'false',
+  'strings',
+  'xxd',
+  'hexdump',
+  'od',
+  'less',
+  'more',
+  'diff',
+  'cmp',
+  'sort',
+  'uniq',
+  'cut',
+  'jq',
+  'yq',
+  'tr',
+  'nl',
+  'identify',
+  'exiftool',
+])
 const CD = new Set(['cd', 'pushd', 'chdir', 'set-location', 'sl', 'push-location'])
 /** PowerShell cmdlets and aliases that write, move, link or remove items. */
 const PS_WRITERS = new Set([
@@ -704,6 +768,20 @@ function effectsOf(seg: SegmentAnalysis): Effect[] {
   for (const raw of flagValues(args, ARCHIVE_DIR_FLAGS[program] ?? [])) {
     out.push({ kind: 'into', raw, sources: [], contents: false, archive: true })
   }
+  // A download that keeps the remote file name lands in the working directory, which may be the
+  // case directory after a `cd` (`cd .guard && curl -O …`, `wget …` with no `-O`/`-P`).
+  const shortFlag = (letters: string) =>
+    args.some((a) => !a.startsWith('--') && new RegExp(`^-[A-Za-z]*[${letters}]`).test(a))
+  const remoteName =
+    (program === 'curl' &&
+      (shortFlag('OJ') || args.some((a) => /^--remote-(?:name|name-all|header-name)$/.test(a)))) ||
+    (program === 'wget' &&
+      !shortFlag('OP') &&
+      !args.some((a) => /^--(?:output-document|directory-prefix)(?:=|$)/.test(a)) &&
+      !args.includes('--spider'))
+  if (remoteName && flagValues(args, OUTPUT_DIR_FLAGS[program] ?? []).length === 0) {
+    out.push({ kind: 'into', raw: '.', sources: [], contents: false })
+  }
   if (PS_DOWNLOADERS.has(program)) {
     for (const raw of psParamValues(args, PS_OUTFILE)) out.push({ kind: 'write', raw })
   }
@@ -712,7 +790,7 @@ function effectsOf(seg: SegmentAnalysis): Effect[] {
   }
   const copy = COPY_SPECS[program]
   if (DESTROY_ALL.has(program) || PS_WRITERS.has(program)) all('destroy')
-  else if (WRITE_ALL.has(program)) all('write')
+  else if (WRITE_ALL.has(program) || EDITORS.has(program)) all('write')
   else if (copy !== undefined) {
     const c = parseCopy(program, args, copy)
     const sources = c.target !== undefined ? c.files : c.files.slice(0, -1)
@@ -726,8 +804,10 @@ function effectsOf(seg: SegmentAnalysis): Effect[] {
         (src) => src === '.' || /[\\/]\.$/.test(src) || (program === 'rsync' && /[\\/]$/.test(src)),
       )
     if (program === 'mv') for (const raw of sources) out.push({ kind: 'destroy', raw })
-    // Fix round 2 (M12): a protected file never becomes a link source (hard or symbolic).
-    if (linking || c.link) for (const raw of c.files) out.push({ kind: 'write', raw })
+    // Fix round 2 (M12): a protected file never becomes a link source (hard or symbolic). Review of
+    // 2026-10-19: nor does its directory or an ancestor, which would alias it for a later write
+    // (`ln -s .guard gg; echo x > gg/engagement.yaml`), so link operands are judged like a removal.
+    if (linking || c.link) for (const raw of c.files) out.push({ kind: 'destroy', raw })
     if (dest !== undefined && !isRemote(dest)) {
       out.push({ kind: 'into', raw: dest, sources, contents })
     }
@@ -736,11 +816,19 @@ function effectsOf(seg: SegmentAnalysis): Effect[] {
   } else if (program === 'dd') {
     for (const a of args) if (a.startsWith('of=')) out.push({ kind: 'write', raw: a.slice(3) })
   } else if (program === 'find') {
-    if (args.includes('-delete')) {
+    // `-delete`, or `-exec`/`-ok` (and the `dir` forms) running anything but a reader, may remove
+    // or rewrite whatever lies under the start directories (`.` when none is given).
+    const execs = args.flatMap((a, i) =>
+      /^-(?:exec|execdir|ok|okdir)$/.test(a) ? [base(args[i + 1] ?? '')] : [],
+    )
+    if (args.includes('-delete') || execs.some((p) => !READ_ONLY.has(p))) {
+      const starts: string[] = []
       for (const a of args) {
+        if (/^-[HLP]$|^-[OD]/.test(a)) continue
         if (a.startsWith('-') || a === '(' || a === '!') break
-        out.push({ kind: 'destroy', raw: a })
+        starts.push(a)
       }
+      for (const raw of starts.length > 0 ? starts : ['.']) out.push({ kind: 'destroy', raw })
     }
   } else if (program === 'expand-archive') {
     const named = psParamValues(args, PS_DESTINATION_PATH)
@@ -779,7 +867,8 @@ function effectsOf(seg: SegmentAnalysis): Effect[] {
     if (sub === 'clean' && args.some((a) => /^-[A-Za-z]*[dxX]/.test(a))) {
       out.push({ kind: 'destroy', raw: '.' })
     } else if (sub === 'rm' || sub === 'mv' || sub === 'checkout' || sub === 'restore') {
-      for (const raw of ops.slice(1)) out.push({ kind: 'write', raw })
+      // A pathspec replaces or removes everything under it (`git checkout -- .guard`).
+      for (const raw of ops.slice(1)) out.push({ kind: 'destroy', raw })
     }
   }
   return out
@@ -806,57 +895,64 @@ interface ScanResult {
   writes: boolean
 }
 
-const SELF_RUNNERS: ReadonlySet<string> = new Set(['npx', 'pnpx', 'bunx'])
-const SELF_NODE: ReadonlySet<string> = new Set(['node', 'nodejs', 'tsx', 'ts-node'])
 const SELF_MUTATING: ReadonlySet<string> = new Set(['ack', 'init'])
 const SELF_ENGAGEMENT: ReadonlySet<string> = new Set(['new', 'freeze', 'edit', 'load'])
-/** The CLI entry of this package by path: under an `engagement-guard` directory, `dist/cli/bin.js` or `src/cli/bin.ts`. */
+/**
+ * The CLI entry of this package by path: under an `engagement-guard` directory, `dist/cli/bin.js`,
+ * `src/cli/bin.ts`, or the `.bin/engagement-guard` shim.
+ */
 const SELF_BIN =
-  /(?:^|[\\/])(?:engagement-guard[\\/].*[\\/]cli[\\/]bin\.[jt]s|dist[\\/]cli[\\/]bin\.js|src[\\/]cli[\\/]bin\.ts)$/i
+  /(?:^|[\\/])(?:engagement-guard[\\/].*[\\/]cli[\\/]bin\.[jt]s|dist[\\/]cli[\\/]bin\.js|src[\\/]cli[\\/]bin\.ts|\.bin[\\/]engagement-guard(?:\.cmd|\.ps1)?)$/i
+/**
+ * The binary and a mutating subcommand inside one word: an inline script (`expect -c "spawn
+ * engagement-guard ack …"`, `pty.spawn(['engagement-guard', 'ack'])`).
+ */
+const SELF_INLINE =
+  /(?:^|[^A-Za-z0-9_.-])engagement-guard(?:\.cmd|\.exe|\.ps1)?["'\]]*[\s,]+["'[]*(?:ack|init|engagement["'\]]*[\s,]+["'[]*(?:new|freeze|edit|load))(?![A-Za-z0-9_-])/i
+
+/** Whether `word` names this package's binary: the bare name (with a shim extension), a path to it, or its entry file. */
+function namesSelf(word: string): boolean {
+  const leafName = (word.replace(/\\/g, '/').split('/').at(-1) ?? '')
+    .toLowerCase()
+    .replace(/\.(?:cmd|exe|ps1|bat)$/, '')
+  return leafName === 'engagement-guard' || SELF_BIN.test(word)
+}
+
+/** The mutating subcommand that starts at `words[i]`, if any. */
+function mutatingAt(words: string[], i: number): string | undefined {
+  const sub = words[i]
+  const sub2 = words[i + 1]
+  if (sub === undefined) return undefined
+  if (SELF_MUTATING.has(sub)) return sub
+  if (sub === 'engagement' && sub2 !== undefined && SELF_ENGAGEMENT.has(sub2)) {
+    return `engagement ${sub2}`
+  }
+  return undefined
+}
 
 /**
  * Final review C1: the commands that acknowledge, create or attest a case are for a person at a
- * terminal. Run from the agent shell, through the binary, `npx`, `pnpm exec` or `node <bin>`,
- * they are a write to the case and are denied like one.
+ * terminal. Run from the agent shell they are a write to the case and are denied like one. Review
+ * of 2026-10-19: by any launcher, wrapper, runtime or inline script, so every word of the segment
+ * is tried as the binary (`npx -p … engagement-guard ack`, `yarn engagement-guard ack`,
+ * `unbuffer engagement-guard ack`, `deno run -A dist/cli/bin.js ack`), and every word is searched
+ * for the binary and subcommand inside it.
  */
 function selfCliHit(seg: SegmentAnalysis): ProtectedHit | undefined {
   const cmd = commandOf(seg)
   if (cmd === undefined) return undefined
-  let program = cmd.program
-  let args = cmd.args
-  const operand = (from: number): number => {
-    for (let i = from; i < args.length; i++) if (!(args[i] as string).startsWith('-')) return i
-    return -1
+  const words = [cmd.program, ...cmd.args]
+  const rule = 'guard attestation commands (a person runs them at a terminal; never the agent)'
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i] as string
+    if (namesSelf(w)) {
+      const sub = mutatingAt(words, i + 1)
+      if (sub !== undefined) return { rule, path: `engagement-guard ${sub}` }
+    }
+    const inline = SELF_INLINE.exec(w)
+    if (inline !== null) return { rule, path: inline[0].trim() }
   }
-  if (SELF_RUNNERS.has(program)) {
-    const i = operand(0)
-    if (i < 0) return undefined
-    program = base(args[i] as string)
-    args = args.slice(i + 1)
-  } else if (
-    (program === 'pnpm' || program === 'yarn') &&
-    (args[0] === 'exec' || args[0] === 'dlx')
-  ) {
-    program = base(args[1] ?? '')
-    args = args.slice(2)
-  } else if (SELF_NODE.has(program)) {
-    const i = operand(0)
-    if (i < 0 || !SELF_BIN.test(args[i] as string)) return undefined
-    program = 'engagement-guard'
-    args = args.slice(i + 1)
-  }
-  if (program !== 'engagement-guard') return undefined
-  const sub = args[0]
-  const sub2 = args[1]
-  if (sub === undefined) return undefined
-  const mutating =
-    SELF_MUTATING.has(sub) ||
-    (sub === 'engagement' && sub2 !== undefined && SELF_ENGAGEMENT.has(sub2))
-  if (!mutating) return undefined
-  return {
-    rule: 'guard attestation commands (a person runs them at a terminal; never the agent)',
-    path: `engagement-guard ${sub}${sub === 'engagement' ? ` ${sub2}` : ''}`,
-  }
+  return undefined
 }
 
 function scanAnalysis(a: CommandAnalysis, s: Scan, start: string | null, out: ScanResult): void {

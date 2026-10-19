@@ -23,7 +23,14 @@ Extracted from the security layer (`packages/sec`) of the authors' Nemesis proje
   code that decodes or executes data, or a script written earlier in the same command now asks
   `OPAQUE_CONSTRUCT`; a substitution on an interpreter segment asks; the guard's own `ack`,
   `init` and `engagement new|freeze|edit|load`, run from a shell by any launcher, are denied
-  `PROTECTED_PATH`. Pinned by 25 new rows of the extraction table (209 rows).
+  `PROTECTED_PATH`. Pinned by 25 new rows of the extraction table.
+- From the pre-release review of 2026-10-19: the attestation commands are denied by any launcher,
+  wrapper, runtime or inline script that names the binary (`npm exec`, `yarn`, `pnpm`,
+  `npx -p`, `bun run`, `deno run`, `node --import`, `unbuffer`, `expect -c`, `pty.spawn`);
+  a link to the case directory or an ancestor (an alias for a later write), an editor saving
+  the case file, `find -delete` or `find -exec <writer>` under a start directory that holds it,
+  a `git checkout`/`restore` pathspec over it, and a remote-name download (`curl -O`, `wget`)
+  into it are `PROTECTED_PATH`. Pinned by 34 new rows (243 rows).
 - Audit chain lock (`createAuditLog({ lock: true, lockTimeoutMs })`) so several processes can
   append to one chain; appends refresh from the chain tail; a stale lock is renamed before it is
   taken over; the shared `index.jsonl` is written under the audit-root lock.

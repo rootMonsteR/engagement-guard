@@ -69,6 +69,6 @@ Every code above is in `REASON_CODES` (`src/policy/decisions.ts`). The code has 
 
 | Code | Verdict | Meaning |
 |---|---|---|
-| `PROTECTED_PATH` | deny | a command or a `Write`/`Edit` call would write, move, remove or link the case file, the frozen scope snapshots, the audit log, or the home's acknowledgement and keys (Nemesis ruling P24; `src/policy/protected-paths.ts`) |
+| `PROTECTED_PATH` | deny | a command or a `Write`/`Edit` call would write, move, remove, link or alias (a link to its directory or an ancestor) the case file, the frozen scope snapshots, the audit log, or the home's acknowledgement and keys; an editor saving the case file, a `find -delete` or `find -exec <writer>` under a start directory that holds it, a `git checkout`/`restore` pathspec over it, or a download by remote name (`curl -O`, `wget`) into its directory; or the guard's own `ack`, `init` and `engagement new|freeze|edit|load` run by any launcher, wrapper, runtime or inline script that names the binary (Nemesis ruling P24; `src/policy/protected-paths.ts`) |
 
 In `REASON_CODES` it sits second, after `HARD_REFUSAL`. Within one verdict the guard picks the code that comes first in `REASON_CODES` (`src/policy/guard.ts`), so that order is part of the behaviour.

@@ -154,9 +154,10 @@ redirect into a shell or interpreter, an encoded PowerShell command, inline code
 executes data, and a script written earlier in the same command. What it still cannot see passes
 to the harness's ordinary rules: a script run with no visible target (`./scan.sh`, `python3 s.py`,
 `make scan`, `npm run scan`), a case file rewritten by an interpreter (`python3 -c "open(…)"`),
-`git checkout -- .guard`, an archive extracted into the workspace, or a download that picks its
-own name after `cd .guard`. The guard denies its own attestation commands when an agent runs
-them, but a person at a terminal can still attest a case the agent rewrote: read the diff
+`git reset --hard` or `git stash` in a repository that tracks the case file, or an archive
+extracted into the workspace. The guard denies its own attestation commands when an agent runs
+them by any launcher it can see, but a copy of the binary under another name is not seen, and a
+person at a terminal can still attest a case the agent rewrote: read the diff
 `engagement-guard engagement edit` shows before attesting. In Claude Code the hook can deny or
 ask; a hook ask forces a prompt even in auto mode, but cannot be made unskippable. The audit
 chain proves no post-hoc alteration without the signing key, not that the operator did not
@@ -165,7 +166,7 @@ below, and the configuration to rely on when compliance depends on it.
 
 ## Tests
 
-The suite has 2,132 tests. On Windows 2,129 pass and 3 are skipped (the POSIX file-mode and `/proc` checks); on Linux and macOS 2,128 pass and 4 are skipped (the Windows path-form checks). CI runs it on all three; the figures are from the run of 2026-10-18 after the final review and the follow-up fixes. The command extraction table in `test/fixtures/commands/extraction-table.yaml` (209 rows) runs each row through the extractor and the guard.
+The suite has 2,200 tests. On Windows 2,197 pass and 3 are skipped (the POSIX file-mode and `/proc` checks); on Linux and macOS 2,196 pass and 4 are skipped (the Windows path-form checks). CI runs it on all three; the figures are from 2026-10-19, after the pre-release review. The command extraction table in `test/fixtures/commands/extraction-table.yaml` (243 rows) runs each row through the extractor and the guard.
 
 ```sh
 pnpm install

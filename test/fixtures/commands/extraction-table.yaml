@@ -301,3 +301,39 @@
 - { cat: N, command: 'node /opt/app/node_modules/engagement-guard/dist/cli/bin.js init --id x', targets: [], decision: deny, reason: PROTECTED_PATH }
 - { cat: N, command: 'engagement-guard engagement show', targets: [], decision: pass, reason: NOT_NETWORK, note: read-only }
 - { cat: N, command: 'engagement-guard audit verify', targets: [], decision: pass, reason: NOT_NETWORK }
+
+# ---- pre-release review 2026-10-19: launchers, wrappers, inline scripts, aliases, editors, find ---
+- { cat: N, command: 'npx -p engagement-guard engagement-guard ack', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'npm exec engagement-guard ack', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'npm exec -- engagement-guard engagement edit', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'npm x engagement-guard ack', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'yarn engagement-guard ack', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'pnpm engagement-guard init --id x', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'node ./node_modules/.bin/engagement-guard ack', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'node --import tsx src/cli/bin.ts ack', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'bun run dist/cli/bin.js engagement freeze --attest acme-table-2026q4', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'deno run -A dist/cli/bin.js ack', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'unbuffer engagement-guard ack', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'faketty engagement-guard engagement new', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'engagement-guard.cmd ack', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'expect -c "spawn engagement-guard ack; expect AGREE; send I\ AGREE\n"', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: "python3 -c \"import pty;pty.spawn(['engagement-guard','ack'])\"", targets: [pty.spawn], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'echo "see engagement-guard engagement show"', targets: [], decision: pass, reason: NOT_NETWORK, note: a read-only subcommand in text }
+- { cat: N, command: 'ln -s .guard gg', targets: [], decision: deny, reason: PROTECTED_PATH, note: an alias of the case directory }
+- { cat: N, command: 'ln -s . gg', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'ln -s /opt/tools tools', targets: [], decision: pass, reason: NOT_NETWORK }
+- { cat: N, command: 'find . -name "*.yaml" -exec rm {} \;', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'find -name engagement.yaml -delete', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'find . -type f -exec sed -i s/a/b/ {} +', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'find . -name "*.ts" -exec grep -l foo {} \;', targets: [], decision: pass, reason: NOT_NETWORK }
+- { cat: N, command: 'find /tmp -name "*.log" -delete', targets: [], decision: pass, reason: NOT_NETWORK }
+- { cat: N, command: 'ex -s -c wq .guard/engagement.yaml', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'vim -es +wq .guard/engagement.yaml', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'vim notes.md', targets: [], decision: pass, reason: NOT_NETWORK }
+- { cat: N, command: 'git checkout -- .guard', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'git restore .guard', targets: [], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'git checkout main', targets: [], decision: pass, reason: NOT_NETWORK }
+- { cat: N, command: 'cd .guard && curl -O http://192.0.2.10/x', targets: ['http://192.0.2.10/x'], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'cd .guard && wget http://192.0.2.10/x', targets: ['http://192.0.2.10/x'], decision: deny, reason: PROTECTED_PATH }
+- { cat: N, command: 'curl -O http://192.0.2.10/x', targets: ['http://192.0.2.10/x'], decision: pass, reason: IN_SCOPE }
+- { cat: N, command: 'wget -q http://192.0.2.10/x', targets: ['http://192.0.2.10/x'], decision: pass, reason: IN_SCOPE }
