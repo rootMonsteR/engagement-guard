@@ -1,6 +1,6 @@
 {
   "name": "engagement-guard",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Authorisation-bounded agent execution: an engagement file, a scope engine, a shell-command target extractor, a fail-closed decision matrix and a hash-chained audit log for AI agents that run security tools.",
   "license": "Apache-2.0",
   "author": "rootMonsteR",
@@ -51,11 +51,20 @@
     "test:watch": "vitest",
     "lint": "biome check .",
     "format": "biome format --write .",
-    "check": "pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "prepublishOnly": "pnpm check && pnpm build"
   },
   "dependencies": {
     "yaml": "^2.9.1",
     "zod": "^4.6.7"
+  },
+  "peerDependencies": {
+    "@types/node": ">=22"
+  },
+  "peerDependenciesMeta": {
+    "@types/node": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.15",

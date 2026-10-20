@@ -1,7 +1,7 @@
 // Extracted from the Nemesis project's packages/sec (snapshot 2026-10-18). Source comments that cite
 // a spec section (§) or a ruling (P<n>) refer to that project's unpublished design documents, kept
 // as provenance; the behaviour contract is docs/decision-matrix.md and the extraction table.
-export const VERSION = '0.1.0'
+export const VERSION = '0.1.1'
 
 export type { AuditRecord } from './audit/record.js'
 export {

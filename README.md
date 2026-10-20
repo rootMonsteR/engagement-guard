@@ -13,7 +13,7 @@ pnpm install && pnpm build
 npm install -g .                       # the `engagement-guard` command
 ```
 
-Requires Node 22.12 or newer and pnpm. To use the library in a project before the npm release, add the clone as a dependency: `npm install /path/to/engagement-guard`.
+Requires Node 22.12 or newer and pnpm. To use the library in a project before the npm release, add the clone as a dependency: `npm install /path/to/engagement-guard`. The package is ESM only: `import` it; `require()` is not supported. Its types refer to Node's, so a TypeScript project needs `@types/node` (declared as an optional peer dependency).
 
 ## Sixty seconds
 

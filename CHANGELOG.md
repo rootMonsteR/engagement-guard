@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.1.1 — 2026-10-20
+
+Fixes from the pre-release and first public reviews, and the packaging work for the npm
+release. No reason code, audit record field, exit code or hook output changed.
+
+- From the pre-release review of 2026-10-19: the attestation commands are denied by any launcher,
+  wrapper, runtime or inline script that names the binary (`npm exec`, `yarn`, `pnpm`,
+  `npx -p`, `bun run`, `deno run`, `node --import`, `unbuffer`, `expect -c`, `pty.spawn`);
+  a link to the case directory or an ancestor (an alias for a later write), an editor saving
+  the case file, `find -delete` or `find -exec <writer>` under a start directory that holds it,
+  a `git checkout`/`restore` pathspec over it, and a remote-name download (`curl -O`, `wget`)
+  into it are `PROTECTED_PATH`. Pinned by 34 new rows (243 rows).
+- From the public review of 2026-10-19: `SECURITY.md` (private vulnerability reporting) and
+  issue templates; the README explains the `§` and `P`-numbered references to the unpublished
+  Nemesis design documents; the test count is given for Windows and Linux.
+- Packaging: `prepublishOnly` runs `pnpm check && pnpm build`, so a publish cannot ship a stale
+  or untested `dist/`; `@types/node` is an optional peer dependency because `dist/index.d.ts`
+  names `NodeJS.ProcessEnv` and `Buffer`; the README states that the package is ESM only.
+- The extraction-table row for `find … -delete` starts at a subdirectory of the workspace
+  instead of `/tmp`, so the suite passes from a clone under `/tmp`, where `/tmp` was an ancestor
+  of the fixture's `.guard` and the guard rightly denied the row. (`/var/log` was not an option:
+  deleting under it is the log-wiping `HARD_REFUSAL`.)
+
 ## 0.1.0 — 2026-10-18
 
 Extracted from the security layer (`packages/sec`) of the authors' Nemesis project, snapshot of
@@ -24,13 +47,6 @@ Extracted from the security layer (`packages/sec`) of the authors' Nemesis proje
   `OPAQUE_CONSTRUCT`; a substitution on an interpreter segment asks; the guard's own `ack`,
   `init` and `engagement new|freeze|edit|load`, run from a shell by any launcher, are denied
   `PROTECTED_PATH`. Pinned by 25 new rows of the extraction table.
-- From the pre-release review of 2026-10-19: the attestation commands are denied by any launcher,
-  wrapper, runtime or inline script that names the binary (`npm exec`, `yarn`, `pnpm`,
-  `npx -p`, `bun run`, `deno run`, `node --import`, `unbuffer`, `expect -c`, `pty.spawn`);
-  a link to the case directory or an ancestor (an alias for a later write), an editor saving
-  the case file, `find -delete` or `find -exec <writer>` under a start directory that holds it,
-  a `git checkout`/`restore` pathspec over it, and a remote-name download (`curl -O`, `wget`)
-  into it are `PROTECTED_PATH`. Pinned by 34 new rows (243 rows).
 - Audit chain lock (`createAuditLog({ lock: true, lockTimeoutMs })`) so several processes can
   append to one chain; appends refresh from the chain tail; a stale lock is renamed before it is
   taken over; the shared `index.jsonl` is written under the audit-root lock.
@@ -43,5 +59,4 @@ Extracted from the security layer (`packages/sec`) of the authors' Nemesis proje
   (`nemesis-audit-v1`) do not verify under this package.
 - The first-run statement (`first-run-v1`) describes this library; no acknowledgement given to
   another product carries over.
-- Source release on GitHub (tag `v0.1.0`). The npm package `engagement-guard` is not published yet;
-  until it is, install from a clone as the README describes.
+- Source release on GitHub (tag `v0.1.0`); not on npm.

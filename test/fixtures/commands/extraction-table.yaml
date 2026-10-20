@@ -326,7 +326,7 @@
 - { cat: N, command: 'find -name engagement.yaml -delete', targets: [], decision: deny, reason: PROTECTED_PATH }
 - { cat: N, command: 'find . -type f -exec sed -i s/a/b/ {} +', targets: [], decision: deny, reason: PROTECTED_PATH }
 - { cat: N, command: 'find . -name "*.ts" -exec grep -l foo {} \;', targets: [], decision: pass, reason: NOT_NETWORK }
-- { cat: N, command: 'find /tmp -name "*.log" -delete', targets: [], decision: pass, reason: NOT_NETWORK }
+- { cat: N, command: 'find build -name "*.log" -delete', targets: [], decision: pass, reason: NOT_NETWORK }
 - { cat: N, command: 'ex -s -c wq .guard/engagement.yaml', targets: [], decision: deny, reason: PROTECTED_PATH }
 - { cat: N, command: 'vim -es +wq .guard/engagement.yaml', targets: [], decision: deny, reason: PROTECTED_PATH }
 - { cat: N, command: 'vim notes.md', targets: [], decision: pass, reason: NOT_NETWORK }
