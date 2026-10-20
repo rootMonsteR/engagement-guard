@@ -1,6 +1,30 @@
 # engagement-guard
 
-engagement-guard decides whether a shell command or a network tool call is authorised by an engagement file, and records every decision in a hash-chained audit log. It sits between an AI agent and the security tools the agent runs. The engagement file sets the scope, the time window, the blackout hours and the rules of engagement. The guard reads each command, extracts its targets, and passes, asks or denies. Why this matters: in an incident report dated 5 August 2026 the UK AI Security Institute counted 19 unsanctioned actions in 10 of 122 cyber-evaluation runs across seven frontier models, in a setup that deliberately allowed open internet access; its fixes are fine-grained network controls and monitoring that blocks out-of-scope actions as a run proceeds. This package is the second kind of fix, for any agent harness: a TypeScript library, a CLI, a Claude Code hook and an MCP server example.
+> Authorisation-bounded execution for AI agents that run security tools.
+
+[![CI](https://github.com/rootMonsteR/engagement-guard/actions/workflows/ci.yml/badge.svg)](https://github.com/rootMonsteR/engagement-guard/actions/workflows/ci.yml)
+[![licence](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
+[![node](https://img.shields.io/badge/node-%3E%3D22.12-brightgreen)](package.json)
+
+engagement-guard sits between an AI agent and the security tools it runs. An engagement file sets the scope, the time window, the blackout hours and the rules of engagement. The guard reads each shell command or network tool call, extracts its targets, and **passes**, **asks** or **denies**. Every decision is written to a hash-chained audit log before it is returned.
+
+It ships as a TypeScript library, a CLI, a Claude Code `PreToolUse` hook and an MCP server example.
+
+```text
+agent ──▶ "nmap 192.0.2.66" ──▶ engagement-guard ──▶ deny OUT_OF_SCOPE ──▶ harness
+                                   │  reads   .guard/engagement.yaml   (scope, window, RoE)
+                                   └─ appends .guard/audit/…jsonl      (hash-chained)
+```
+
+**Why this exists.** In an incident report dated 5 August 2026, the UK AI Security Institute counted 19 unsanctioned actions in 10 of 122 cyber-evaluation runs across seven frontier models, in a setup that deliberately allowed open internet access. Its recommended fixes are fine-grained network controls, and monitoring that blocks out-of-scope actions as a run proceeds. This package is the second kind of fix, for any agent harness.
+
+## What it does
+
+- **Scope from a file.** `.guard/engagement.yaml` lists the in-scope and out-of-scope targets, the window, blackout hours, the tiers the rules of engagement allow, and rate limits. A frozen scope is hashed; an edited one must be attested again by a person.
+- **Reads the command, not the tool.** It tokenises the shell command, unwraps `sudo`, `env`, `xargs`, `ssh`, `docker run` and the like, knows the target flags of common security tools, reads target-list files, and sweeps everything else for literal addresses and URLs.
+- **Fails closed.** What it cannot read asks (a substitution, a pipe into a shell, an encoded command). Any error denies. An audit log that cannot be written denies.
+- **Protects itself.** The case file, the scope snapshots, the audit log and the keys cannot be written, moved, linked or aliased by the agent, and the attestation commands refuse to run without a person at a terminal.
+- **Audits everything.** One hash-chained log per session. `audit verify` checks the chains; `audit export` signs a bundle.
 
 ## Install
 
@@ -13,18 +37,42 @@ pnpm install && pnpm build
 npm install -g .                       # the `engagement-guard` command
 ```
 
-Requires Node 22.12 or newer and pnpm. To use the library in a project before the npm release, add the clone as a dependency: `npm install /path/to/engagement-guard`. The package is ESM only: `import` it; `require()` is not supported. Its types refer to Node's, so a TypeScript project needs `@types/node` (declared as an optional peer dependency).
+Requires Node 22.12 or newer and pnpm. To use the library in a project before the npm release, add the clone as a dependency: `npm install /path/to/engagement-guard`.
+
+The package is ESM only: `import` it; `require()` is not supported. Its types refer to Node's, so a TypeScript project needs `@types/node` installed. It is declared as an optional peer dependency and the declaration file references it, so no `types` entry in your tsconfig is needed.
+
+Pre-1.0: a change to the reason codes, the audit record, the exit codes or the hook output is at least a minor version bump, and [CHANGELOG.md](CHANGELOG.md) names every one.
 
 ## Sixty seconds
 
-This is a real run of the CLI, captured on Windows under Git Bash. It uses a scratch workspace and a scratch `GUARD_HOME`. The window brackets the time of the run. Paths inside the workspace are shown as `<demo>`, with forward slashes. The operator statement printed by `ack` is left out here; read it in full when you run `ack`. `init`, `ack` and `engagement freeze|edit|load` must be typed at a terminal: run without one (piped, or by an agent) they refuse, and the guard denies them when it sees them in a shell command.
+Write the engagement, attest it, and check four commands:
 
 ```sh
-pnpm build
-export GUARD_HOME="$(mktemp -d)"
-cd "$(mktemp -d)"            # the workspace, outside the repo: shown as <demo> below
-alias engagement-guard="node /path/to/engagement-guard/dist/cli/bin.js"
+export GUARD_HOME="$(mktemp -d)"     # the operator's home: acknowledgement and signing key
+cd "$(mktemp -d)"                    # the workspace: shown as <demo> below
+
+engagement-guard init --id demo-2026q4 --name Demo --client "Demo Ltd" \
+  --in 192.0.2.0/24 --out 192.0.2.66 \
+  --window-start 2026-10-17T19:02:38Z --window-end 2026-10-19T19:02:38Z --timezone UTC \
+  --auth-ref SOW-1 --authorised-by "Dana Reyes" --signed-on 2026-10-10
+engagement-guard engagement validate
+engagement-guard ack --operator alice            # prints the operator statement; type I AGREE
+engagement-guard engagement freeze --attest demo-2026q4
 ```
+
+| Command | Verdict | Exit |
+|---|---|---|
+| `engagement-guard check "nmap 192.0.2.10"` | pass `IN_SCOPE` | 0 |
+| `engagement-guard check "nmap 203.0.113.5"` | ask `UNKNOWN_TARGET` (in no scope list) | 1 |
+| `engagement-guard check "nmap 192.0.2.66"` | deny `OUT_OF_SCOPE` (listed under `out`) | 2 |
+| `engagement-guard check "echo bm1hcCAxOTIuMC4yLjY2 \| base64 -d \| sh"` | ask `OPAQUE_CONSTRUCT` (code the guard cannot read) | 1 |
+
+Use a window that brackets the time of your run. `init`, `ack` and `engagement freeze|edit|load` must be typed at a terminal: piped, or run by an agent, they refuse, and the guard denies them when it sees them in a shell command. `check` exits 0 for a pass or a call it does not inspect, 1 for an ask and 2 for a deny. Run `engagement-guard --help` for every command.
+
+<details>
+<summary>The full transcript of that run</summary>
+
+Captured on Windows under Git Bash. Workspace paths are shown as `<demo>`, with forward slashes. The operator statement printed by `ack` is left out; read it in full when you run `ack`.
 
 ```text
 $ engagement-guard init --id demo-2026q4 --name Demo --client "Demo Ltd" --in 192.0.2.0/24 --out 192.0.2.66 --window-start 2026-10-17T19:02:38Z --window-end 2026-10-19T19:02:38Z --timezone UTC --auth-ref SOW-1 --authorised-by "Dana Reyes" --signed-on 2026-10-10
@@ -95,20 +143,22 @@ ok demo-2026q4/7becbe09-0f23-44f9-b0ba-d7c6d50d4cf0.jsonl 3 0d8510a8966e
 # exit code 0
 ```
 
-`203.0.113.5` is in no scope list, so the guard asks. `192.0.2.66` is listed under `out`, so it denies. A command decoded into a shell cannot be read, so it asks (`OPAQUE_CONSTRUCT`, with the construct named). Each CLI call, the freeze included, runs as its own audit session, which is why `audit verify` lists five chains. `check` exits 0 for a pass or a call it does not inspect, 1 for an ask and 2 for a deny. Run `engagement-guard --help` for every command.
+Each CLI call, the freeze included, runs as its own audit session, which is why `audit verify` lists five chains.
+
+</details>
 
 ## Claude Code hook
 
-`engagement-guard hook` is a Claude Code `PreToolUse` hook. It checks each `Bash` command, and each `Write`, `Edit`, `MultiEdit` and `NotebookEdit` against the protected case paths, before the call runs, and answers `deny` or `ask`, or stays silent on a pass. Other tools are inspected when named with `--tool` and listed in the matcher.
-A hook ask forces a prompt even in auto mode, but Claude Code has no unskippable ask, so an exploitation-tier confirmation arrives as an ask whose reason starts `[cannot be auto-approved]`.
-Any failure on the way to a decision, a malformed payload or a decision that outlives `--timeout-ms` becomes a `deny` with `GUARD_ERROR` on stdout and stderr with exit 2, because a crashed or timed-out hook would let the call run.
+`engagement-guard hook` is a Claude Code `PreToolUse` hook. It checks each `Bash` command, and each `Write`, `Edit`, `MultiEdit` and `NotebookEdit` against the protected case paths, before the call runs. It answers `deny` or `ask`, or stays silent on a pass. Other tools are inspected when named with `--tool` and listed in the matcher.
+
+- A hook ask forces a prompt even in auto mode. Claude Code has no unskippable ask, so an exploitation-tier confirmation arrives as an ask whose reason starts `[cannot be auto-approved]`.
+- Any failure on the way to a decision, a malformed payload, or a decision that outlives `--timeout-ms` becomes a `deny` with `GUARD_ERROR` on stdout and stderr and exit 2, because a crashed or timed-out hook would let the call run.
 
 Setup, sample output and limits: [examples/claude-code/README.md](examples/claude-code/README.md).
 
 ## MCP server example
 
-An example MCP server with a `guarded_shell` tool: it runs a command only when `guard.check` passes, and returns the decision text otherwise. It also offers `engagement_status`.
-It is an example, not a published package: [examples/mcp-server/README.md](examples/mcp-server/README.md).
+An example MCP server with a `guarded_shell` tool: it runs a command only when `guard.check` passes, and returns the decision text otherwise. It also offers `engagement_status`. It is an example, not a published package: [examples/mcp-server/README.md](examples/mcp-server/README.md).
 
 ## Library
 
@@ -148,21 +198,14 @@ A failure anywhere in the guard is `GUARD_ERROR`, and an audit log that cannot b
 
 ## Honest limits
 
-The guard reads command text, not behaviour. It asks instead of guessing when the code a shell
-or interpreter will run is not in the text: a substitution, a variable, an `eval`, a pipe or
-redirect into a shell or interpreter, an encoded PowerShell command, inline code that decodes or
-executes data, and a script written earlier in the same command. What it still cannot see passes
-to the harness's ordinary rules: a script run with no visible target (`./scan.sh`, `python3 s.py`,
-`make scan`, `npm run scan`), a case file rewritten by an interpreter (`python3 -c "open(…)"`),
-`git reset --hard` or `git stash` in a repository that tracks the case file, or an archive
-extracted into the workspace. The guard denies its own attestation commands when an agent runs
-them by any launcher it can see, but a copy of the binary under another name is not seen, and a
-person at a terminal can still attest a case the agent rewrote: read the diff
-`engagement-guard engagement edit` shows before attesting. In Claude Code the hook can deny or
-ask; a hook ask forces a prompt even in auto mode, but cannot be made unskippable. The audit
-chain proves no post-hoc alteration without the signing key, not that the operator did not
-rewrite the chain. A network-level egress control that does not read commands is the layer
-below, and the configuration to rely on when compliance depends on it.
+The guard reads command text, not behaviour.
+
+- **It asks instead of guessing** when the code a shell or interpreter will run is not in the text: a substitution, a variable, an `eval`, a pipe or redirect into a shell or interpreter, an encoded PowerShell command, inline code that decodes or executes data, a script written earlier in the same command.
+- **It cannot see**, and passes to the harness's ordinary rules: a script run with no visible target (`./scan.sh`, `python3 s.py`, `make scan`, `npm run scan`), a case file rewritten by an interpreter (`python3 -c "open(…)"`), `git reset --hard` or `git stash` in a repository that tracks the case file, or an archive extracted into the workspace.
+- **Attestation is for people.** The guard denies its own attestation commands when an agent runs them by any launcher it can see, but a copy of the binary under another name is not seen, and a person at a terminal can still attest a case the agent rewrote: read the diff `engagement-guard engagement edit` shows before attesting.
+- **Claude Code** lets a hook deny or ask; an ask forces a prompt even in auto mode, but cannot be made unskippable.
+- **The audit chain** proves no post-hoc alteration without the signing key, not that the operator did not rewrite the chain.
+- **The layer below** is a network-level egress control that does not read commands. That is the configuration to rely on when compliance depends on it.
 
 ## Tests
 
@@ -172,6 +215,14 @@ The suite has 2,200 tests. On Windows 2,197 pass and 3 are skipped (the POSIX fi
 pnpm install
 pnpm check      # biome lint, tsc typecheck, vitest
 ```
+
+## Documentation
+
+- [docs/decision-matrix.md](docs/decision-matrix.md): the decision matrix and every reason code.
+- [examples/claude-code/README.md](examples/claude-code/README.md): the hook, its settings and what Claude sees.
+- [examples/mcp-server/README.md](examples/mcp-server/README.md): the MCP server example.
+- [SECURITY.md](SECURITY.md): what counts as a vulnerability here, and how to report one privately.
+- [CHANGELOG.md](CHANGELOG.md): every release, with each behaviour change named.
 
 ## Licence
 
