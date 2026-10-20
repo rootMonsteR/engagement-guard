@@ -27,6 +27,7 @@ release. No reason code, audit record field, exit code or hook output changed.
   instead of `/tmp`, so the suite passes from a clone under `/tmp`, where `/tmp` was an ancestor
   of the fixture's `.guard` and the guard rightly denied the row. (`/var/log` was not an option:
   deleting under it is the log-wiping `HARD_REFUSAL`.)
+- Published on npm as `engagement-guard`; source on GitHub, tag `v0.1.1`.
 
 ## 0.1.0 — 2026-10-18
 
