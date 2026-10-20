@@ -16,8 +16,13 @@ release. No reason code, audit record field, exit code or hook output changed.
   issue templates; the README explains the `§` and `P`-numbered references to the unpublished
   Nemesis design documents; the test count is given for Windows and Linux.
 - Packaging: `prepublishOnly` runs `pnpm check && pnpm build`, so a publish cannot ship a stale
-  or untested `dist/`; `@types/node` is an optional peer dependency because `dist/index.d.ts`
-  names `NodeJS.ProcessEnv` and `Buffer`; the README states that the package is ESM only.
+  or untested `dist/`. The declaration file starts with `/// <reference types="node" />` and
+  `@types/node` is an optional peer dependency, because the public types name
+  `NodeJS.ProcessEnv` and `Buffer` and TypeScript 7 no longer includes every `@types` package by
+  default: a consumer with `@types/node` installed compiles without a `types` entry in its
+  tsconfig. The README states that the package is ESM only.
+- MCP server example: `ExecEvents.emit` takes a distributive omit of `GuardEvent`, so the
+  example typechecks (an `Omit` over the union dropped `execId`).
 - The extraction-table row for `find … -delete` starts at a subdirectory of the workspace
   instead of `/tmp`, so the suite passes from a clone under `/tmp`, where `/tmp` was an ancestor
   of the fixture's `.guard` and the guard rightly denied the row. (`/var/log` was not an option:

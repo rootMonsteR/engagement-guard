@@ -2,9 +2,12 @@ import { spawn } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import type { EventSource, Guard, GuardEvent, GuardOutcome } from 'engagement-guard'
 
+/** `Omit` over each member of a union, not over the keys the members share. */
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
+
 /** The events this example reports to the guard's audit log, with the `emit` the guard lacks. */
 export interface ExecEvents extends EventSource {
-  emit(e: Omit<GuardEvent, 'ts'>): void
+  emit(e: DistributiveOmit<GuardEvent, 'ts'>): void
 }
 
 /** A tiny event source wired into `guard.subscribe`, so executions land in the audit chain. */
