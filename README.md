@@ -29,12 +29,24 @@ agent ──▶ "nmap 192.0.2.66" ──▶ engagement-guard ──▶ deny OUT_
 
 ## Install
 
+From npm:
+
 ```sh
 npm install -g engagement-guard        # the `engagement-guard` command
 npm install engagement-guard           # the library, in a project
 ```
 
-Requires Node 22.12 or newer. From a clone instead: `pnpm install && pnpm build && npm install -g .`.
+From a clone:
+
+```sh
+git clone https://github.com/rootMonsteR/engagement-guard.git
+cd engagement-guard
+pnpm install && pnpm build
+npm install -g .                       # the `engagement-guard` command
+npm install /path/to/engagement-guard  # the library, run in your project
+```
+
+Requires Node 22.12 or newer, and pnpm for the clone.
 
 The package is ESM only: `import` it; `require()` is not supported. Its types refer to Node's, so a TypeScript project needs `@types/node` installed. It is declared as an optional peer dependency and the declaration file references it, so no `types` entry in your tsconfig is needed.
 

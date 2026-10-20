@@ -16,6 +16,8 @@ hook at the installed binary rather than at `npx`, which may have to download fi
 npm install -g engagement-guard        # provides the `engagement-guard` command used below
 ```
 
+Or from a clone: `git clone https://github.com/rootMonsteR/engagement-guard.git && cd engagement-guard && pnpm install && pnpm build && npm install -g .`.
+
 Add the hook to `.claude/settings.json` in the project (or to your user settings). The file in
 this directory is the complete snippet:
 
